@@ -26,6 +26,7 @@
           mode="inline"
           :default-selected-keys="[layout.routeMenu[0].id]"
         >
+          <!-- 路由导航 -->
           <a-menu-item v-for="item in layout.routeMenu" :key="item.id">
             <router-link :to="item.to">
               <a-icon :type="item.icon" />{{ item.title }}
@@ -33,26 +34,144 @@
           </a-menu-item>
         </a-menu>
       </a-layout-sider>
+      <a-layout>
+        <!-- 网页头部 -->
+        <a-layout-header :style="{ padding: 0 }">
+          <!-- 显示连接状态 -->
+          <status-point
+            :type="isConnected ? 'success' : 'danger'"
+            :text="isConnected ? '连接成功' : '未连接'"
+          />
+          <!-- 连接按钮 -->
+          <a-button
+            class="primary-button"
+            type="primary"
+            :disabled="isConnected"
+            @click="connect"
+          >
+            连接
+          </a-button>
+          <!-- 断开连接按钮 -->
+          <a-button
+            class="primary-button"
+            type="primary"
+            :disabled="!isConnected"
+            @click="disconnect"
+          >
+            断开连接
+          </a-button>
+          <!-- 打开设置按钮 -->
+          <a-icon
+            type="setting"
+            class="setting-button"
+            :style="{ color: 'white', fontSize: '1.2rem', margin: '1.3rem' }"
+            :spin="settingSpin"
+            @mouseover="settingSpin = true"
+            @mouseleave="settingSpin = false"
+            @click="drawerVisible = true"
+          />
+        </a-layout-header>
+        <a-layout-content></a-layout-content>
+        <!-- 网页尾部 -->
+        <a-layout-footer :style="{ textAlign: 'center' }">
+          Copyright © nonlinearthink<br />
+        </a-layout-footer>
+      </a-layout>
     </a-layout>
-    <a-layout>
-      <a-layout-header></a-layout-header>
-      <a-layout-content></a-layout-content>
-      <a-layout-footer> Copyright © nonlinearthink<br /> </a-layout-footer>
-    </a-layout>
+    <a-drawer
+      title="MQTT连接参数设置"
+      placement="right"
+      :closable="false"
+      :width="400"
+      :visible="drawerVisible"
+      @close="drawerVisible = false"
+    >
+      <a-form-model
+        :model="form"
+        :label-col="{ span: 4 }"
+        :wrapper-col="{ span: 20 }"
+      >
+        <a-form-model-item label="地址">
+          <a-input v-model="form.host" />
+        </a-form-model-item>
+        <a-form-model-item label="端口号">
+          <a-input v-model="form.port" />
+        </a-form-model-item>
+        <a-form-model-item label="路径">
+          <a-input v-model="form.path" />
+        </a-form-model-item>
+        <a-form-model-item label="用户名">
+          <a-input v-model="form.username" />
+        </a-form-model-item>
+        <a-form-model-item label="密码">
+          <a-input v-model="form.password" type="password" />
+        </a-form-model-item>
+      </a-form-model>
+      <!-- 底部按钮 -->
+      <div
+        class="bottom-fixed-item"
+        :style="{
+          borderTop: '1px solid #e8e8e8',
+          padding: '0.8rem 1rem',
+          textAlign: 'right'
+        }"
+      >
+        <a-button style="marginRight: 1rem" @click="onClose">
+          取消
+        </a-button>
+        <a-button type="primary" @click="onClose">
+          修改
+        </a-button>
+      </div>
+    </a-drawer>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-@Component
+import { State, Mutation } from "vuex-class";
+// constant
+import { MqttConnectState } from "./constant/index";
+import { FormModel } from "./types";
+// 自定义组件
+import StatusPoint from "./components/StatusPoint.vue";
+@Component({
+  components: {
+    StatusPoint
+  }
+})
 export default class App extends Vue {
-  layout = {
+  @State("status") status!: MqttConnectState;
+  @State("host") host!: string;
+  @State("port") port!: number;
+  @State("path") path!: string;
+  @State("username") username!: string;
+  @State("password") password!: string;
+  private layout = {
     routeMenu: [
       { id: 1, title: "温湿度监控", to: "/", icon: "project" },
       { id: 3, title: "调色盘", to: "/palette", icon: "dashboard" },
       { id: 2, title: "屏幕消息", to: "/message", icon: "mobile" }
     ]
   };
+  private settingSpin = false;
+  private drawerVisible = false;
+  private form = new FormModel(
+    this.host,
+    this.port,
+    this.path,
+    this.username,
+    this.password
+  );
+  public get isConnected(): boolean {
+    return this.status == MqttConnectState.Connected;
+  }
+  public connect(): void {
+    console.log("ok");
+  }
+  public disconnect(): void {
+    console.log("ok");
+  }
 }
 </script>
 
@@ -61,19 +180,22 @@ export default class App extends Vue {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
 }
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+.ant-layout-header {
+  text-align: right;
+  .primary-button {
+    margin: 1rem;
+  }
+  .setting-button {
+    &:hover {
+      cursor: pointer;
     }
   }
+}
+.bottom-fixed-item {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
 </style>
