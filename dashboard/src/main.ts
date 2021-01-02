@@ -8,9 +8,9 @@ import Antd from "ant-design-vue";
 import "ant-design-vue/dist/antd.css";
 Vue.use(Antd);
 
-// 颜色选择器
-// import vcolorpicker from "vcolorpicker";
-// Vue.use(vcolorpicker);
+// Highcharts
+import HighchartsVue from "highcharts-vue";
+Vue.use(HighchartsVue);
 
 import "default-passive-events";
 

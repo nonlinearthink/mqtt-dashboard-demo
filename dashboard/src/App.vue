@@ -21,11 +21,7 @@
           </div>
         </div>
         <!-- 导航 -->
-        <a-menu
-          theme="dark"
-          mode="inline"
-          :default-selected-keys="[layout.routeMenu[0].id]"
-        >
+        <a-menu theme="dark" mode="inline" :selected-keys="selectedKeys">
           <!-- 路由导航 -->
           <a-menu-item v-for="item in layout.routeMenu" :key="item.id">
             <router-link :to="item.to">
@@ -154,9 +150,9 @@ export default class App extends Vue {
   @State("password") password!: string;
   private layout = {
     routeMenu: [
-      { id: 1, title: "温湿度监控", to: "/", icon: "project" },
-      { id: 3, title: "调色盘", to: "/palette", icon: "dashboard" },
-      { id: 2, title: "屏幕消息", to: "/message", icon: "mobile" }
+      { id: "1", title: "温湿度监控", to: "/", icon: "project" },
+      { id: "2", title: "调色盘", to: "/palette", icon: "dashboard" },
+      { id: "3", title: "屏幕消息", to: "/message", icon: "mobile" }
     ]
   };
   private drawerVisible = false;
@@ -176,6 +172,11 @@ export default class App extends Vue {
   }
   public get isConnected(): boolean {
     return this.status == MqttConnectStatus.Connected;
+  }
+  public get selectedKeys(): string[] {
+    return this.layout.routeMenu
+      .filter(item => item.to == this["$route"].path)
+      .map(item => item.id);
   }
   public onCloseSetting(): void {
     this.form.host = this.host;
