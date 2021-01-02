@@ -1,4 +1,4 @@
-export enum MqttConnectState {
+export enum MqttConnectStatus {
   Hanging = 0,
   Connecting = 1,
   Connected = 2

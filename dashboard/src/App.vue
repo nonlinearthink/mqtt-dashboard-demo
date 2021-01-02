@@ -65,13 +65,16 @@
             type="setting"
             class="setting-button"
             :style="{ color: 'white', fontSize: '1.2rem', margin: '1.3rem' }"
-            :spin="settingSpin"
-            @mouseover="settingSpin = true"
-            @mouseleave="settingSpin = false"
             @click="drawerVisible = true"
           />
         </a-layout-header>
-        <a-layout-content></a-layout-content>
+        <a-layout-content :style="{ margin: '1.5rem 1rem 0' }">
+          <div
+            :style="{ padding: '1.5rem', background: '#fff', height: '100%' }"
+          >
+            <router-view />
+          </div>
+        </a-layout-content>
         <!-- 网页尾部 -->
         <a-layout-footer :style="{ textAlign: 'center' }">
           Copyright © nonlinearthink<br />
@@ -116,10 +119,10 @@
           textAlign: 'right'
         }"
       >
-        <a-button style="marginRight: 1rem" @click="onClose">
+        <a-button style="marginRight: 1rem" @click="onCloseSetting">
           取消
         </a-button>
-        <a-button type="primary" @click="onClose">
+        <a-button type="primary" @click="onEditSetting">
           修改
         </a-button>
       </div>
@@ -131,17 +134,19 @@
 import { Component, Vue } from "vue-property-decorator";
 import { State, Mutation } from "vuex-class";
 // constant
-import { MqttConnectState } from "./constant/index";
+import { MqttConnectStatus } from "./constant/index";
 import { FormModel } from "./types";
 // 自定义组件
 import StatusPoint from "./components/StatusPoint.vue";
+import type from "./store/mutation-type";
+import mqtt from "mqtt";
 @Component({
   components: {
     StatusPoint
   }
 })
 export default class App extends Vue {
-  @State("status") status!: MqttConnectState;
+  @State("status") status!: MqttConnectStatus;
   @State("host") host!: string;
   @State("port") port!: number;
   @State("path") path!: string;
@@ -154,23 +159,71 @@ export default class App extends Vue {
       { id: 2, title: "屏幕消息", to: "/message", icon: "mobile" }
     ]
   };
-  private settingSpin = false;
   private drawerVisible = false;
-  private form = new FormModel(
-    this.host,
-    this.port,
-    this.path,
-    this.username,
-    this.password
-  );
+  private form!: FormModel;
+  private client!: mqtt.Client;
+  @Mutation(type.UPDATE_SETTING) updateSetting!: Function;
+  @Mutation(type.SET_STATUS) setStatus!: Function;
+  created() {
+    this.setStatus(MqttConnectStatus.Hanging);
+    this.form = new FormModel(
+      this.host,
+      this.port,
+      this.path,
+      this.username,
+      this.password
+    );
+  }
   public get isConnected(): boolean {
-    return this.status == MqttConnectState.Connected;
+    return this.status == MqttConnectStatus.Connected;
+  }
+  public onCloseSetting(): void {
+    this.form.host = this.host;
+    this.form.port = this.port;
+    this.form.path = this.path;
+    this.form.username = this.username;
+    this.form.password = this.password;
+    this.drawerVisible = false;
+  }
+  public onEditSetting(): void {
+    this.updateSetting(this.form);
+    this.drawerVisible = false;
+    this["$message"].success({ content: "修改成功!", duration: 1 });
   }
   public connect(): void {
-    console.log("ok");
+    const clientId = `mqttjs_${Math.random()
+      .toString(16)
+      .substr(2, 8)}`;
+    const options = {
+      clientId,
+      username: this.username,
+      password: this.password
+    };
+    const connectUrl = `ws://${this.host}:${this.port}${this.path}`;
+    try {
+      this.client = mqtt.connect(connectUrl, options);
+      let connecting = true;
+      setTimeout(() => {
+        if (connecting == true) {
+          this["$message"].error({ content: "连接超时!", duration: 1 });
+          connecting = false;
+          this.client.end();
+        }
+      }, 5000);
+      this.client.on("connect", () => {
+        connecting = false;
+        this.setStatus(MqttConnectStatus.Connected);
+        this["$message"].success({ content: "连接成功!", duration: 1 });
+      });
+    } catch (e) {
+      this["$message"].error({ content: e, duration: 1 });
+      this.setStatus(MqttConnectStatus.Hanging);
+    }
   }
   public disconnect(): void {
-    console.log("ok");
+    this.setStatus(MqttConnectStatus.Hanging);
+    this["$message"].info({ content: "连接已断开", duration: 1 });
+    this.client.end(true);
   }
 }
 </script>

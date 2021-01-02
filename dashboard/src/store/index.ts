@@ -1,12 +1,12 @@
 import Vue from "vue";
 import Vuex, { StoreOptions } from "vuex";
-// vuex持久化
+// vuex持久化插件
 import createPersistedState from "vuex-persistedstate";
+import mutations from "./mutations";
 // type
 import { RootState } from "./types";
-import { FormModel } from "../types";
 // enum
-import { MqttConnectState } from "../constant/index";
+import { MqttConnectStatus } from "../constant/index";
 
 Vue.use(Vuex);
 
@@ -18,17 +18,9 @@ const store: StoreOptions<RootState> = {
     path: "",
     username: "",
     password: "",
-    status: MqttConnectState.Hanging
+    status: MqttConnectStatus.Hanging
   },
-  mutations: {
-    UPDATE_SETTING(state, form: FormModel) {
-      state.host = form.host;
-      state.port = form.port;
-      state.path = form.path;
-      state.username = form.username;
-      state.password = form.password;
-    }
-  },
+  mutations,
   actions: {},
   getters: {}
 };

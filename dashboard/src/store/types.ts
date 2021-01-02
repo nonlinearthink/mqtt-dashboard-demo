@@ -1,4 +1,4 @@
-import { MqttConnectState } from "../constant/index";
+import { MqttConnectStatus } from "../constant/index";
 
 export interface RootState {
   host: string;
@@ -6,5 +6,5 @@ export interface RootState {
   path: string;
   username: string;
   password: string;
-  status: MqttConnectState;
+  status: MqttConnectStatus;
 }
