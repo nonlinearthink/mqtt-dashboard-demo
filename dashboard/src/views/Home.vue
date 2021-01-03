@@ -30,19 +30,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { State } from "vuex-class";
 import VChart from "vue-echarts";
 import "echarts/lib/chart/gauge";
 import "echarts/lib/component/tooltip";
-// import LineChart from "../components/LineChart.vue";
 import moment from "moment";
+import { EspData } from "../types";
 @Component({
   components: {
     VChart
-    // LineChart
   }
 })
 export default class HomePage extends Vue {
+  @State("esp") esp!: string[];
   private gauge = {
     tooltip: {
       formatter: "{a}<br/>{c}°C"
@@ -56,7 +57,7 @@ export default class HomePage extends Vue {
         min: 0,
         max: 37,
         detail: { formatter: "{value}­°C" },
-        data: [{ value: 50.3, name: "当前温度" }]
+        data: [{ value: 0, name: "当前温度" }]
       },
       {
         name: "湿度",
@@ -66,7 +67,7 @@ export default class HomePage extends Vue {
         min: 0,
         max: 100,
         detail: { formatter: "{value}­%" },
-        data: [{ value: 50.3, name: "当前湿度" }]
+        data: [{ value: 0, name: "当前湿度" }]
       }
     ]
   };
@@ -127,36 +128,19 @@ export default class HomePage extends Vue {
       label: "100%"
     }
   };
-  created() {
-    setInterval(() => {
-      const temperature = Number((Math.random() * 100).toFixed(2));
-      const humidity = Number((Math.random() * 100).toFixed(2));
-      this.gauge.series[0].data[0].value = temperature;
-      this.gauge.series[1].data[0].value = humidity;
-      // this.dynamicLine.labels.shift();
-      // this.dynamicLine.labels.push(moment().format("HH:mm:ss"));
-      // const temperatureCache = JSON.parse(
-      //   JSON.stringify(this.dynamicLine.datasets[0].data)
-      // );
-      // const humidityCache = JSON.parse(
-      //   JSON.stringify(this.dynamicLine.datasets[1].data)
-      // );
-      // temperatureCache.shift();
-      // temperatureCache.push(temperature);
-      // this.dynamicLine.datasets[0].data = temperatureCache;
-      // humidityCache.shift();
-      // humidityCache.push(humidity);
-      if (this.dynamicLine.series[0].data.length >= 7)
-        this.dynamicLine.series[0].data.shift();
-      this.dynamicLine.series[0].data.push(temperature);
-      if (this.dynamicLine.series[1].data.length >= 7)
-        this.dynamicLine.series[1].data.shift();
-      this.dynamicLine.series[1].data.push(humidity);
-      // this.dynamicLine.datasets[0].data.shift();
-      // this.dynamicLine.datasets[0].data.push(temperature);
-      // this.dynamicLine.datasets[1].data.shift();
-      // this.dynamicLine.datasets[1].data.push(humidity);
-    }, 2000);
+  @Watch("esp")
+  public updateDate(value: EspData[]): void {
+    console.log("esp update");
+    console.log(value);
+    const { temperature, humidity } = value[value.length - 1];
+    this.gauge.series[0].data[0].value = temperature;
+    this.gauge.series[1].data[0].value = humidity;
+    if (this.dynamicLine.series[0].data.length >= 10)
+      this.dynamicLine.series[0].data.shift();
+    this.dynamicLine.series[0].data.push(temperature);
+    if (this.dynamicLine.series[1].data.length >= 10)
+      this.dynamicLine.series[1].data.shift();
+    this.dynamicLine.series[1].data.push(humidity);
   }
   public onTemperatureChange(value: number[]): void {
     this.gauge.series[0].min = value[0];

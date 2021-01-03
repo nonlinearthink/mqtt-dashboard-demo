@@ -1,4 +1,5 @@
 import { MqttConnectStatus } from "../constant/index";
+import { EspData } from "../types";
 
 export interface RootState {
   host: string;
@@ -7,4 +8,5 @@ export interface RootState {
   username: string;
   password: string;
   status: MqttConnectStatus;
+  esp: EspData[];
 }

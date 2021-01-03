@@ -18,7 +18,8 @@ const store: StoreOptions<RootState> = {
     path: "",
     username: "",
     password: "",
-    status: MqttConnectStatus.Hanging
+    status: MqttConnectStatus.Hanging,
+    esp: []
   },
   mutations,
   actions: {},

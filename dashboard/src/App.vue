@@ -131,11 +131,13 @@ import { Component, Vue } from "vue-property-decorator";
 import { State, Mutation } from "vuex-class";
 // constant
 import { MqttConnectStatus } from "./constant/index";
-import { FormModel } from "./types";
+import { FormModel, EspData } from "./types";
 // 自定义组件
 import StatusPoint from "./components/StatusPoint.vue";
 import type from "./store/mutation-type";
 import mqtt from "mqtt";
+import { Uint8ArrayToString } from "./util/uint2string";
+
 @Component({
   components: {
     StatusPoint
@@ -160,6 +162,7 @@ export default class App extends Vue {
   private client!: mqtt.Client;
   @Mutation(type.UPDATE_SETTING) updateSetting!: Function;
   @Mutation(type.SET_STATUS) setStatus!: Function;
+  @Mutation(type.PUSH_ESP_DATA) pushEspData!: Function;
   created() {
     this.setStatus(MqttConnectStatus.Hanging);
     this.form = new FormModel(
@@ -215,6 +218,7 @@ export default class App extends Vue {
         connecting = false;
         this.setStatus(MqttConnectStatus.Connected);
         this["$message"].success({ content: "连接成功!", duration: 1 });
+        this.onConnected();
       });
     } catch (e) {
       this["$message"].error({ content: e, duration: 1 });
@@ -225,6 +229,35 @@ export default class App extends Vue {
     this.setStatus(MqttConnectStatus.Hanging);
     this["$message"].info({ content: "连接已断开", duration: 1 });
     this.client.end(true);
+  }
+  public onConnected(): void {
+    const espTopic = "ZUCC-ZXJ/esp";
+    this.client.subscribe(
+      espTopic,
+      {
+        qos: 0
+      },
+      err => {
+        if (err) {
+          console.log(err);
+          this["$message"].error({
+            content: `订阅${espTopic}失败!`,
+            duration: 1
+          });
+        } else {
+          this["$message"].success({
+            content: `订阅${espTopic}成功!`,
+            duration: 1
+          });
+        }
+      }
+    );
+    this.client.on("message", (espTopic, payload, packet) => {
+      const convertedData: EspData = JSON.parse(Uint8ArrayToString(payload));
+      console.log(convertedData);
+      console.log(packet);
+      this.pushEspData(convertedData);
+    });
   }
 }
 </script>

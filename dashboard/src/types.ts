@@ -18,3 +18,8 @@ export class FormModel {
     this.password = password ? password : "";
   }
 }
+
+export interface EspData {
+  temperature: number;
+  humidity: number;
+}
