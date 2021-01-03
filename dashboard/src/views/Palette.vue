@@ -1,9 +1,20 @@
 <template>
   <div id="palette-page">
-    <a-row type="flex" justify="end" align="top">
-      <a-button type="primary" icon="redo" @click="onSyncColor">
-        同步到ESP8266
-      </a-button>
+    <a-row type="flex" justify="end" align="middle">
+      <a-col>
+        <a-tooltip
+          placement="topLeft"
+          title="使用 ZUCC-ZXJ/rgb"
+          arrow-point-at-center
+        >
+          <a-icon type="question-circle" :style="{ paddingRight: '0.5rem' }" />
+        </a-tooltip>
+      </a-col>
+      <a-col>
+        <a-button type="primary" icon="redo" @click="onSyncColor">
+          同步到ESP8266
+        </a-button>
+      </a-col>
     </a-row>
     <color-picker
       :color="color"

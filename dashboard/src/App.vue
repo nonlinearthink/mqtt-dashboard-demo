@@ -105,6 +105,19 @@
         <a-form-model-item label="密码">
           <a-input v-model="form.password" type="password" />
         </a-form-model-item>
+        <a-form-model-item label="Qos">
+          <a-select default-value="0" style="width: 100%" @change="disconnect">
+            <a-select-option value="0">
+              0 (最多一次)
+            </a-select-option>
+            <a-select-option value="1">
+              1 (最少一次)
+            </a-select-option>
+            <a-select-option value="2">
+              2 (有且只有一次)
+            </a-select-option>
+          </a-select>
+        </a-form-model-item>
       </a-form-model>
       <!-- 底部按钮 -->
       <div
@@ -130,7 +143,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { State, Mutation } from "vuex-class";
 // constant
-import { MqttConnectStatus } from "./constant/index";
+import { MqttConnectStatus, MqttQos } from "./constant/index";
 import { FormModel, EspData, Color } from "./types";
 // 自定义组件
 import StatusPoint from "./components/StatusPoint.vue";
@@ -151,6 +164,7 @@ export default class App extends Vue {
   @State("username") username!: string;
   @State("password") password!: string;
   @State("color") color!: Color;
+  @State("message") message!: string;
   private layout = {
     routeMenu: [
       { id: "1", title: "温湿度监控", to: "/", icon: "project" },
@@ -161,9 +175,11 @@ export default class App extends Vue {
   private drawerVisible = false;
   private form!: FormModel;
   private client!: mqtt.Client;
+  private qos = MqttQos.AtMostOnce;
   @Mutation(type.UPDATE_SETTING) updateSetting!: Function;
   @Mutation(type.SET_STATUS) setStatus!: Function;
   @Mutation(type.PUSH_ESP_DATA) pushEspData!: Function;
+  @Mutation(type.SET_MESSAGE) setMessage!: Function;
   created() {
     this.setStatus(MqttConnectStatus.Hanging);
     this.form = new FormModel(
@@ -187,7 +203,9 @@ export default class App extends Vue {
     if (this.isConnected) {
       const colorTopic = "ZUCC-ZXJ/rgb";
       try {
-        this.client.publish(colorTopic, JSON.stringify(value), { qos: 0 });
+        this.client.publish(colorTopic, JSON.stringify(value), {
+          qos: this.qos
+        });
         this["$message"].success({ content: "同步成功!", duration: 1 });
       } catch (e) {
         this["$message"].error({ content: "同步失败", duration: 1 });
@@ -195,6 +213,26 @@ export default class App extends Vue {
     } else {
       this["$message"].error({ content: "未连接MQTT", duration: 1 });
     }
+  }
+  @Watch("message")
+  public publishMessage(value: string): void {
+    if (value == "") {
+      return;
+    }
+    if (this.isConnected) {
+      const colorTopic = "ZUCC-ZXJ/oled";
+      try {
+        this.client.publish(colorTopic, JSON.stringify({ msg: value }), {
+          qos: this.qos
+        });
+        this["$message"].success({ content: "发送成功!", duration: 1 });
+      } catch (e) {
+        this["$message"].error({ content: "发送失败", duration: 1 });
+      }
+    } else {
+      this["$message"].error({ content: "未连接MQTT", duration: 1 });
+    }
+    this.setMessage("");
   }
   public onCloseSetting(): void {
     this.form.host = this.host;
@@ -232,7 +270,10 @@ export default class App extends Vue {
       this.client.on("connect", () => {
         connecting = false;
         this.setStatus(MqttConnectStatus.Connected);
-        this["$message"].success({ content: "连接成功!", duration: 1 });
+        this["$notification"].open({
+          message: "连接成功",
+          description: `欢迎，${this.username}～。`
+        });
         this.onConnected();
       });
     } catch (e) {
@@ -241,28 +282,34 @@ export default class App extends Vue {
     }
   }
   public disconnect(): void {
-    this.setStatus(MqttConnectStatus.Hanging);
-    this["$message"].info({ content: "连接已断开", duration: 1 });
-    this.client.end(true);
+    if (this.status == MqttConnectStatus.Connected) {
+      this.setStatus(MqttConnectStatus.Hanging);
+      this["$notification"].open({
+        message: "连接断开",
+        description: `检查到你更改了Qos，请重新连接！`
+      });
+      this.client.end(true);
+    }
   }
   public onConnected(): void {
     const espTopic = "ZUCC-ZXJ/esp";
+
     this.client.subscribe(
       espTopic,
       {
-        qos: 0
+        qos: this.qos
       },
       err => {
         if (err) {
           console.log(err);
           this["$message"].error({
-            content: `订阅${espTopic}失败!`,
+            content: `订阅初始化失败`,
             duration: 1
           });
         } else {
-          this["$message"].success({
-            content: `订阅${espTopic}成功!`,
-            duration: 1
+          this["$notification"].open({
+            message: "ZUCC-ZXJ/esp",
+            description: `欢迎订阅～`
           });
         }
       }

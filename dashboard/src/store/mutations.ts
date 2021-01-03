@@ -25,6 +25,9 @@ const mutation = {
   },
   [type.SET_COLOR as string](state: RootState, color: Color) {
     state.color = color;
+  },
+  [type.SET_MESSAGE as string](state: RootState, message: string) {
+    state.message = message;
   }
 };
 

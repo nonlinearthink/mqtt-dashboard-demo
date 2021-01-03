@@ -56,7 +56,7 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
     }
     if (topicString.equals(String(TOPIC_OLED)))
     {
-        message = doc["msg"];
+        message = doc["msg"].as<String>();
         update_oled();
     }
 }

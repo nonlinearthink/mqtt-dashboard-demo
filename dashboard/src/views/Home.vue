@@ -1,7 +1,29 @@
 <template>
   <div id="home-page">
     <a-tabs default-active-key="1">
-      <a-tab-pane key="1" tab="仪表盘模式">
+      <a-tab-pane key="1" tab="简约模式">
+        <a-row type="flex" justify="space-around" :style="{ margin: '1rem' }">
+          <a-col>
+            <a-statistic
+              title="温度"
+              :value="gauge.series[0].data[0].value"
+              suffix="°C"
+            />
+          </a-col>
+          <a-col>
+            <a-statistic
+              title="湿度"
+              :value="gauge.series[1].data[0].value"
+              suffix="%"
+            />
+          </a-col>
+        </a-row>
+        <flip-clock
+          :options="{ clockFace: 'TwentyFourHourClock' }"
+          :style="{ margin: '10rem 0' }"
+        />
+      </a-tab-pane>
+      <a-tab-pane key="2" tab="仪表盘模式">
         <a-row :style="{ margin: '1.5rem' }">
           温度精度范围:
           <a-slider
@@ -22,8 +44,15 @@
         </a-row>
         <v-chart :options="gauge" autoresize />
       </a-tab-pane>
-      <a-tab-pane key="2" tab="折线图模式">
-        <highcharts :options="dynamicLine"></highcharts>
+      <a-tab-pane key="3" tab="折线图模式">
+        <highcharts
+          :options="dynamicTemperature"
+          :style="{ height: '50%' }"
+        ></highcharts>
+        <highcharts
+          :options="dynamicHumidity"
+          :style="{ height: '50%' }"
+        ></highcharts>
       </a-tab-pane>
     </a-tabs>
   </div>
@@ -32,6 +61,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { State } from "vuex-class";
+import { FlipClock } from "@mvpleung/flipclock";
 import VChart from "vue-echarts";
 import "echarts/lib/chart/gauge";
 import "echarts/lib/component/tooltip";
@@ -39,7 +69,8 @@ import moment from "moment";
 import { EspData } from "../types";
 @Component({
   components: {
-    VChart
+    VChart,
+    FlipClock
   }
 })
 export default class HomePage extends Vue {
@@ -71,25 +102,43 @@ export default class HomePage extends Vue {
       }
     ]
   };
-  private dynamicLine = {
+  private dynamicTemperature = {
     chart: {
       type: "spline"
     },
     title: {
-      text: "温度湿度关系时间序列图"
+      text: "温度时间序列图"
     },
     subtitle: {
       text: "数据采集自ESP8266"
     },
+    colors: ["#2f7ed8"],
     tooltip: {
-      crosshairs: true,
-      shared: true
+      crosshairs: true
     },
     series: [
       {
         name: "温度",
         data: [0]
-      },
+      }
+    ]
+  };
+  private dynamicHumidity = {
+    chart: {
+      type: "spline"
+    },
+    title: {
+      text: "湿度时间序列图"
+    },
+
+    subtitle: {
+      text: "数据采集自ESP8266"
+    },
+    colors: ["#1aadce"],
+    tooltip: {
+      crosshairs: true
+    },
+    series: [
       {
         name: "湿度",
         data: [0]
@@ -106,6 +155,9 @@ export default class HomePage extends Vue {
       );
     }
     return dateList;
+  }
+  private get currentTime() {
+    return new Date().getTime();
   }
   private temperatureMarks = {
     0: {
@@ -135,12 +187,12 @@ export default class HomePage extends Vue {
     const { temperature, humidity } = value[value.length - 1];
     this.gauge.series[0].data[0].value = temperature;
     this.gauge.series[1].data[0].value = humidity;
-    if (this.dynamicLine.series[0].data.length >= 10)
-      this.dynamicLine.series[0].data.shift();
-    this.dynamicLine.series[0].data.push(temperature);
-    if (this.dynamicLine.series[1].data.length >= 10)
-      this.dynamicLine.series[1].data.shift();
-    this.dynamicLine.series[1].data.push(humidity);
+    if (this.dynamicTemperature.series[0].data.length >= 10)
+      this.dynamicTemperature.series[0].data.shift();
+    this.dynamicTemperature.series[0].data.push(temperature);
+    if (this.dynamicHumidity.series[0].data.length >= 10)
+      this.dynamicHumidity.series[0].data.shift();
+    this.dynamicHumidity.series[0].data.push(humidity);
   }
   public onTemperatureChange(value: number[]): void {
     this.gauge.series[0].min = value[0];
@@ -167,5 +219,8 @@ export default class HomePage extends Vue {
 }
 .ant-tabs {
   height: 100%;
+}
+.flip-clock-wrapper ul {
+  background: black;
 }
 </style>

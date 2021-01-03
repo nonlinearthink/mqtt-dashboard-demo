@@ -10,4 +10,5 @@ export interface RootState {
   status: MqttConnectStatus;
   esp: EspData[];
   color: Color;
+  message: string;
 }

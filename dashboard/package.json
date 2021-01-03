@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@caohenghu/vue-colorpicker": "^1.2.4",
+    "@mvpleung/flipclock": "0.0.6",
     "@types/echarts": "^4.9.3",
     "ant-design-vue": "^1.7.2",
     "core-js": "^3.6.5",

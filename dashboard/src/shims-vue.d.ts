@@ -5,3 +5,4 @@ declare module "*.vue" {
 declare module "vue-echarts";
 // declare module "vcolorpicker";
 declare module "@caohenghu/vue-colorpicker";
+declare module "@mvpleung/flipclock";
