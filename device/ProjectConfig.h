@@ -1,4 +1,7 @@
 #define DHT11PIN 5
+#define R_PIN 13
+#define G_PIN 12
+#define B_PIN 14
 
 #define WLAN_SSID "HONOR V20"
 #define WLAN_PASS "5e191bafa177"

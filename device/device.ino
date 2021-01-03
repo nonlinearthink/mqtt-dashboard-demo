@@ -5,10 +5,18 @@
 #include "DHTesp.h"
 #include "ArduinoJson.h"
 #include "PubSubClient.h"
+#include "SSD1306Wire.h"
+#include "U8g2lib.h"
+#include "chinese.h"
 
 DHTesp dht;
 WiFiClient client;
 PubSubClient mqttClient(client);
+SSD1306Wire display(0x3c, 2, 14);
+
+String t_buf = "";
+String h_buf = "";
+String message = "";
 
 void setup_wifi()
 {
@@ -41,6 +49,16 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
     deserializeJson(doc, payload, length);
     serializeJsonPretty(doc, Serial);
     Serial.println();
+    String topicString = String(topic);
+    if (topicString.equals(String(TOPIC_RGB)))
+    {
+        set_color(doc["red"], doc["green"], doc["blue"]);
+    }
+    if (topicString.equals(String(TOPIC_OLED)))
+    {
+        message = doc["msg"];
+        update_oled();
+    }
 }
 
 void mqtt_reconnect()
@@ -67,6 +85,13 @@ void mqtt_reconnect()
     }
 }
 
+void set_color(unsigned char red, unsigned char green, unsigned char blue)
+{
+    analogWrite(R_PIN, red);
+    analogWrite(G_PIN, green);
+    analogWrite(B_PIN, blue);
+}
+
 void setup()
 {
     // 串口初始化
@@ -80,6 +105,7 @@ void setup()
     mqttClient.setCallback(mqtt_callback);
     // 设置 dht11 端口
     dht.setup(DHT11PIN, DHTesp::DHT11);
+    display.init();
 }
 
 StaticJsonDocument<256> read_dht()
@@ -89,12 +115,38 @@ StaticJsonDocument<256> read_dht()
     // 获取数据
     float humidity = dht.getHumidity();
     float temperature = dht.getTemperature();
+    // 缓存
+    t_buf = "";
+    h_buf = "";
     // 如果不是 nan，则添加到 json 对象中
     if (!isnan(humidity))
+    {
         doc["humidity"] = humidity;
+        t_buf += "Humidity:             " + String(humidity) + "% ";
+    }
     if (!isnan(temperature))
+    {
         doc["temperature"] = temperature;
+        h_buf += "Temperature:      " + String(temperature) + "­°C";
+    }
+    update_oled();
     return doc;
+}
+
+void update_oled()
+{
+    display.clear();
+    display.drawIco16x16(0, 0, zhou, 0);
+    display.drawIco16x16(16, 0, xin, 0);
+    display.drawIco16x16(32, 0, jie, 0);
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(48, 0, "  31801319");
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(0, 16, h_buf);
+    display.drawString(0, 26, t_buf);
+    display.drawString(0, 36, message);
+    display.display();
+    delay(1000);
 }
 
 void loop()

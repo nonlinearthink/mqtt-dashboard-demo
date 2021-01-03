@@ -1,5 +1,5 @@
 import { MqttConnectStatus } from "../constant/index";
-import { EspData } from "../types";
+import { EspData, Color } from "../types";
 
 export interface RootState {
   host: string;
@@ -9,4 +9,5 @@ export interface RootState {
   password: string;
   status: MqttConnectStatus;
   esp: EspData[];
+  color: Color;
 }

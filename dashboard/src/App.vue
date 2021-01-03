@@ -127,11 +127,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import { State, Mutation } from "vuex-class";
 // constant
 import { MqttConnectStatus } from "./constant/index";
-import { FormModel, EspData } from "./types";
+import { FormModel, EspData, Color } from "./types";
 // 自定义组件
 import StatusPoint from "./components/StatusPoint.vue";
 import type from "./store/mutation-type";
@@ -150,6 +150,7 @@ export default class App extends Vue {
   @State("path") path!: string;
   @State("username") username!: string;
   @State("password") password!: string;
+  @State("color") color!: Color;
   private layout = {
     routeMenu: [
       { id: "1", title: "温湿度监控", to: "/", icon: "project" },
@@ -180,6 +181,20 @@ export default class App extends Vue {
     return this.layout.routeMenu
       .filter(item => item.to == this["$route"].path)
       .map(item => item.id);
+  }
+  @Watch("color")
+  public publishColor(value: Color): void {
+    if (this.isConnected) {
+      const colorTopic = "ZUCC-ZXJ/rgb";
+      try {
+        this.client.publish(colorTopic, JSON.stringify(value), { qos: 0 });
+        this["$message"].success({ content: "同步成功!", duration: 1 });
+      } catch (e) {
+        this["$message"].error({ content: "同步失败", duration: 1 });
+      }
+    } else {
+      this["$message"].error({ content: "未连接MQTT", duration: 1 });
+    }
   }
   public onCloseSetting(): void {
     this.form.host = this.host;

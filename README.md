@@ -11,3 +11,5 @@
 - [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 - [DHTesp](https://github.com/beegee-tokyo/DHTesp)
 - [PubSubClient](https://github.com/knolleary/pubsubclient/)
+- SSD1306Wire
+- U8g2lib

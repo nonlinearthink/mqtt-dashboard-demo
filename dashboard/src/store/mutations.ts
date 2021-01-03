@@ -1,6 +1,6 @@
 import type from "./mutation-type";
 import { RootState } from "./types";
-import { FormModel } from "../types";
+import { FormModel, Color } from "../types";
 import { MqttConnectStatus } from "../constant/index";
 import { EspData } from "../types";
 
@@ -22,6 +22,9 @@ const mutation = {
     } else {
       state.esp.push(data);
     }
+  },
+  [type.SET_COLOR as string](state: RootState, color: Color) {
+    state.color = color;
   }
 };
 

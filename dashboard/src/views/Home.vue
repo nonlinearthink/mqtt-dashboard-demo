@@ -17,7 +17,7 @@
             range
             :marks="humidityMarks"
             :default-value="[0, 100]"
-            @change="onTemperatureChange"
+            @change="onHumidityChange"
           />
         </a-row>
         <v-chart :options="gauge" autoresize />
@@ -145,6 +145,10 @@ export default class HomePage extends Vue {
   public onTemperatureChange(value: number[]): void {
     this.gauge.series[0].min = value[0];
     this.gauge.series[0].max = value[1];
+  }
+  public onHumidityChange(value: number[]): void {
+    this.gauge.series[1].min = value[0];
+    this.gauge.series[1].max = value[1];
   }
 }
 </script>
