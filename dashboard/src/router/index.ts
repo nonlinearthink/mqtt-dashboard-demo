@@ -18,6 +18,16 @@ const routes: Array<RouteConfig> = [
     path: "/message",
     name: "Message",
     component: () => import("../views/Message.vue")
+  },
+  {
+    path: "/message",
+    name: "Message",
+    component: () => import("../views/Message.vue")
+  },
+  {
+    path: "/statistic",
+    name: "Statistic",
+    component: () => import("../views/Statistic.vue")
   }
 ];
 

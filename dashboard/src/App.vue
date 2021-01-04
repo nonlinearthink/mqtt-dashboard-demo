@@ -167,9 +167,10 @@ export default class App extends Vue {
   @State("message") message!: string;
   private layout = {
     routeMenu: [
-      { id: "1", title: "温湿度监控", to: "/", icon: "project" },
+      { id: "1", title: "温湿度监控", to: "/", icon: "line-chart" },
       { id: "2", title: "调色盘", to: "/palette", icon: "dashboard" },
-      { id: "3", title: "屏幕消息", to: "/message", icon: "mobile" }
+      { id: "3", title: "屏幕消息", to: "/message", icon: "mobile" },
+      { id: "4", title: "历史记录", to: "/statistic", icon: "profile" }
     ]
   };
   private drawerVisible = false;
